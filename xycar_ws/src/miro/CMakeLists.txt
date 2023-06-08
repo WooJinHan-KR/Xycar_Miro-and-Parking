@@ -16,6 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
 )
 
+find_package(OpenCV 4.1.1 REQUIRED PATHS ~/OpenCV4/install/cmake/opencv4)
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
@@ -26,11 +28,13 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+)
  # ${YDLIDAR_SDK_PATH}/include
  # ${YDLIDAR_SDK_PATH}/src
  # ${RPLIDAR_SDK_PATH}/include
-#  ${RPLIDAR_SDK_PATH}/src
-)
+#  ${RPLIDARSDK_PATH}/src
+
 
   add_library(miro_modules
     src/go.cpp
@@ -43,5 +47,5 @@ target_link_libraries(${PROJECT_NAME}
  miro_modules
 #  ${YAML_CPP_LIBRARIES}
   ${catkin_LIBRARIES}
- # ${OpenCV_LIBRARIES}
+  ${OpenCV_LIBRARIES}
 )

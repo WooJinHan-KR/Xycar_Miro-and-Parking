@@ -14,7 +14,16 @@
       <param name="frequency"    type="double" value="10"/>
       <param name="samp_rate"    type="int"    value="5"/>
     </node>
-
+    <node name="usb_cam" output="screen" pkg="usb_cam" type="usb_cam_node">
+    <param name="video_device" value="/dev/videoCAM" />
+    <param name="autoexposure" value="false" />
+    <param name="exposure" value="30" />
+    <param name="image_width" value="640" />
+    <param name="image_height" value="480" />
+    <param name="pixel_format" value="yuyv" />
+    <param name="camera_frame_id" value="usb_cam" />
+    <param name="io_method" value="mmap" />
+  </node>
   <node pkg="xycar_imu" type="9dof_imu_node.py" name="xycar_imu" output="screen">
     <param name="rviz_mode" type="string" value="true" />
     <param name="port" type="string" value="/dev/ttyIMU" />
