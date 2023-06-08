@@ -1,0 +1,14 @@
+<launch>
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_scan_filter">
+    <param name="scan_in" value="laser_scan" />
+    <param name="scan_out" value="filtered_scan" />
+    <rosparam>
+      scan_filter_chain:
+      - name: angular_bounds
+        type: laser_filters/LaserScanAngularBoundsFilter
+        params:
+          lower_angle: -1.57079632679
+          upper_angle: 1.57079632679
+    </rosparam>
+  </node>
+</launch>
