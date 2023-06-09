@@ -4,9 +4,11 @@
 #include <vector>
 #include <iostream>
 
-#define MAX_ULTRA_RANGE 140
-int flag = 1;
-int a =0;
+int Mode = 1;
+int a = 0;
+int first = 0;
+float b = 0;
+
 GoNode::GoNode()
 {
     ros::NodeHandle nh;
@@ -48,14 +50,14 @@ void GoNode::imageCallback(const sensor_msgs::Image& message)
         // Calculate and print the center point of the rectangle
         cv::Point center(rect.x + rect.width / 2, rect.y + rect.height / 2);
         //std::cout << "Center: " << center << std::endl;
-        if(center.y > 180 && center.y < 300 && center.x > 320 && center.x < 520){
+        if(center.y > 180 && center.y < 300 && center.x > 170 && center.x < 520){
             first_count++;    
             first_count = first_count +a;          
         }
 
         if(first_count == 7)
         {
-            flag = 4;
+            Mode = 4;
             a = 100;
         }
               
@@ -129,7 +131,6 @@ void GoNode::UltraCallback(const std_msgs::Int32MultiArray::ConstPtr& msg)
     //ROS_INFO_STREAM("Rightsonic : " << Rightsonic);
 }
 
-
 void GoNode::scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
     std::vector<float> subset_ranges(msg->ranges.begin(), msg->ranges.end());
@@ -183,7 +184,7 @@ void GoNode::scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 void GoNode::drive(int max_index)
 {
     xycar_msgs::xycar_motor motorMessage;
-    float mXycarSpeed = 5.0f;
+    float mXycarSpeed = 9.0f;
     motorMessage.angle = std::round(max_index);
     motorMessage.speed = std::round(mXycarSpeed);
 
@@ -210,15 +211,6 @@ void GoNode::stop()
     publisher.publish(motorMessage);
 }
 
-/*
-void GoNode::Parking()
-{
-    xycar_msgs::xycar_motor motorMessage;
-
-    
-
-}*/
-
 static constexpr int32_t kXycarSteeringAangleLimit = 50; ///< Xycar Steering Angle Limit
 static constexpr double kFrameRate = 33.0;  
 
@@ -231,70 +223,93 @@ void GoNode::run()
         ros::spinOnce();
         int angle = this->max_index;
 
-        if(angle<=126 && angle>=1)
+        if(angle<=LEFT_START && angle>=LEFT_END)
             angle *= -1;
-        else if(angle >= 378 && angle <= 504)
-            angle = 504 - angle;
+        else if(angle >= RIGHT_START && angle <= RIGHT_END)
+            angle = RIGHT_END - angle;
 
-        //parking back
-        if(flag == 4)
+        if(Mode == PARKING)
         {
-            drive(30);
-            ROS_INFO_STREAM("Flag : " << flag);
-            //drive((center.x-320)/2);
-            if(min_length < 0.25){
-            flag = 5;
+            if(min_length < 0.35 && first == 0)
+                drive(-10);
+            else if(min_length > 0.35 && first == 0)
+                drive(35);
+            else if(min_length > 0.35 && first == 1)
+                drive(-25);
+            else if(min_length < 0.35 && first == 1)
+                drive(5);
+            /*else if(first == 2)
+                drive(-35);
+
+            if(first == 2 && min_length < 0.275)
+                first = 3;
+
+            if(first == 3 && Backsonic_center > 20){
+                b += 0.1;
+                if(b > 50)
+                    b = 50;
+                back(50 - b);  
+            }
+            else if(first == 3 && Backsonic_center < 20){
+                stop();
+                break;
+            }*/
+            
+            ROS_INFO_STREAM("Mode : " << Mode);
+            ROS_INFO_STREAM("first : " << first);
+
+            if(min_length < 0.25 && (first == 1 || first == 0)){
+            Mode = OUT;
             stop();
+            if(first == 1)
+                break;
             ros::Duration duration (3.0);
             duration.sleep();
            }
         }
 
-        if(flag == 5 && min_length < 0.25){
-            back(25);
-            flag = 5;
-            ROS_INFO_STREAM("Flag : " << flag);
+        if(Mode == OUT && min_length < 0.25){
+            back(12);
+            Mode = OUT;
+            ROS_INFO_STREAM("Mode : " << Mode);
         }
-        else if(min_length < 0.25 || flag == 2){   
+        else if((min_length < 0.25 || Mode == BACK) && first != 3){   
             back(angle);
-            flag = 2;
+            Mode = 2;
         }
-        else if(flag==5 && back_min > 15){
-            back(25);
-
+        else if(Mode == OUT && back_min > 15){
+            back(12);
         }
-        if(back_min < 15 && flag == 5){
-            flag = 1;
+        if(back_min < 15 && Mode == OUT){
+            Mode = NORMAL;
             a=0;
+            first = 1;
         }
 
-        if((min_length > 0.55 || back_min < 40 )&& flag == 2) /*|| side_min <15 || back_min < 40 */
-            flag = 1;
+        if((min_length > 0.55 || back_min < 35)&& Mode == BACK) /*|| side_min <15 || back_min < 40 */
+            Mode = NORMAL;
         
-        //flag = 1 normal
-        //flag = 0 avoid
-        //flag = 2 back
-        if(min_length <= 0.4 && flag == 1)
+        if(min_length <= 0.4 && Mode == NORMAL)
         {
             if(min_index <= 126)
                 drive(50);
             else if(min_index >378 && min_index < 504)
                 drive(-50);           
-            flag = 0;
+            Mode = AVOID;
         }
-        else if(min_length <= 0.5 && flag == 0)
+        else if(min_length <= 0.5 && Mode == AVOID)
         {
             if(min_index <= 126)
                 drive(50);
             else if(min_index >378 && min_index < 504)
                 drive(-50);
         }
-        else if(min_length > 0.5 && flag == 0)
+        else if(min_length > 0.5 && Mode == AVOID)
         {
-            flag = 1;
+            Mode = NORMAL;
             drive(angle);
         }
-        else if(flag == 1 && min_length > 0.4)
+        else if(Mode == NORMAL && min_length > 0.4)
             drive(angle);
   
         rate.sleep();

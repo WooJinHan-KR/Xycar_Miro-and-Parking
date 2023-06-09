@@ -10,6 +10,17 @@
 #include <sensor_msgs/Image.h>
 #include "opencv2/opencv.hpp"
 
+#define MAX_ULTRA_RANGE 140
+#define AVOID 0
+#define NORMAL 1
+#define BACK 2
+#define PARKING 4
+#define OUT 5
+#define LEFT_START 126
+#define LEFT_END 1
+#define RIGHT_START 378
+#define RIGHT_END 504
+
 class GoNode {
     private:
         ros::Publisher publisher;
@@ -25,32 +36,26 @@ class GoNode {
         int max_index;
         int detect = 0;
 
-
         int Leftsonic;
         int Rightsonic;
-        int  Backsonic_left;
-        int  Backsonic_center;
-        int  Backsonic_right;
+        int Backsonic_left;
+        int Backsonic_center;
+        int Backsonic_right;
         int back_min;
         int side_min;
 
         cv::Mat Frame;
         cv::Point center;
-
-       
+   
         void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
         void imageCallback(const sensor_msgs::Image& message);
         void UltraCallback(const std_msgs::Int32MultiArray::ConstPtr& msg);
-
-
-        ////////////////////////////////////////////////////////////////
 
         float current_roll;
         float current_pitch;
         float current_yaw;
         void imuCallback(const sensor_msgs::Imu::ConstPtr& msg);
 
-////////////////////////////////////////////////////////////////////////////
         void drive(int steeringAngle);
         void back(int steeringAngle);
         void stop();
