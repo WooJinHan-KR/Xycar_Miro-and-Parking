@@ -1,14 +1,14 @@
 #include <ros/ros.h>
-#include <go.hpp>
+#include <MazeEscape.hpp>
 
 int32_t main(int32_t argc, char** argv)
 {
-    ros::init(argc, argv, "go_node");
+    ros::init(argc, argv, "MazeEscaper_node");
     ROS_INFO("Main Node Started");
 
-    GoNode go_node;
+    MazeEscaper MazeEscaper_node;
 
-    go_node.run();
+    MazeEscaper_node.run();
 
     return 0;
 }
