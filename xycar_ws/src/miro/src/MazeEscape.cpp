@@ -257,7 +257,7 @@ void MazeEscaper::run()
         case AVOID :
             if(min_index <= LEFT_START)
                drive(FULL_RIGHT_STEERING);
-            else if(min_index >RIGHT_START && min_index < RIGHT_END)
+            else if(min_index > RIGHT_START && min_index < RIGHT_END)
                 drive(FULL_LEFT_STEERING);
 
             if(min_length > 0.5){
